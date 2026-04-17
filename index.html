@@ -46,16 +46,16 @@
         .sidebar-nav li.active { background-color: #f1f5f9; color: var(--color-blue); font-weight: 500; }
         .sidebar-nav li.active::before { background-color: var(--color-blue); }
 
-        /* Dept Colors */
-        .dept-sales li::before { background-color: var(--color-red); }
-        .dept-finance li::before { background-color: var(--color-blue); }
-        .dept-accounts li::before { background-color: var(--color-orange); }
-        .dept-marketing li::before { background-color: #ec4899; }
-        .dept-product li::before { background-color: #a855f7; }
-        .dept-csat li::before { background-color: #10b981; }
-        .dept-supply-chain li::before { background-color: var(--color-orange); }
-        .dept-hr li::before { background-color: #d1d5db; }
-        .dept-video-editing li::before { background-color: #881337; }
+        /* Fixed Dept Colors CSS */
+        li.dept-sales::before { background-color: var(--color-red); }
+        li.dept-finance::before { background-color: var(--color-blue); }
+        li.dept-accounts::before { background-color: var(--color-orange); }
+        li.dept-marketing::before { background-color: #ec4899; }
+        li.dept-product::before { background-color: #a855f7; }
+        li.dept-csat::before { background-color: #10b981; }
+        li.dept-supply-chain::before { background-color: var(--color-orange); }
+        li.dept-hr::before { background-color: #d1d5db; }
+        li.dept-video-editing::before { background-color: #881337; }
 
         .status-tag { font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 500; }
         .status-tag.watch { color: #b45309; background-color: var(--color-tag-orange); }
@@ -73,7 +73,6 @@
         .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .sync-info { display: flex; align-items: center; gap: 15px; font-size: 0.875rem; color: var(--text-sub); }
         .sync-dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--color-green); }
-        .row-count { padding: 4px 10px; border-radius: 12px; background-color: #f1f5f9; }
         .refresh-btn { border: 1px solid #e5e7eb; background: #fff; padding: 8px 16px; border-radius: 8px; font-size: 0.875rem; cursor: pointer; transition: background 0.2s; }
         .refresh-btn:hover { background-color: #f9fafb; }
 
@@ -109,16 +108,15 @@
         .progress-bar-container { width: 100%; height: 6px; background-color: #f1f5f9; border-radius: 3px; margin-top: 5px; position: relative; }
         .progress-bar { height: 100%; border-radius: 3px; position: absolute; top: 0; left: 0; }
 
-        /* --- Dynamic Table Styles (SaaS Look) --- */
+        /* --- Dynamic Table Styles --- */
         .table-wrapper { background: var(--bg-card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); overflow-x: auto; }
         table { border-collapse: collapse; width: 100%; font-size: 13px; white-space: nowrap; }
         th, td { text-align: left; padding: 12px 15px; border-bottom: 1px solid #e5e7eb; }
         
-        /* Modern table headers */
         tr:nth-child(1) th { background-color: #f8fafc; color: var(--text-sub); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;}
-        tr:nth-child(2) th { background-color: #e0f2fe; color: var(--color-blue); font-size: 12px;} /* Target */
-        tr:nth-child(3) th { background-color: #fef3c7; color: #b45309; font-size: 12px;} /* Threshold */
-        tr:nth-child(4) th { background-color: #f1f5f9; color: var(--text-main); font-weight: 600; } /* Sub-headers */
+        tr:nth-child(2) th { background-color: #e0f2fe; color: var(--color-blue); font-size: 12px;} 
+        tr:nth-child(3) th { background-color: #fef3c7; color: #b45309; font-size: 12px;} 
+        tr:nth-child(4) th { background-color: #f1f5f9; color: var(--text-main); font-weight: 600; } 
         
         tr:hover td { background-color: #f8fafc; }
         .loading-text { font-style: italic; color: var(--text-sub); padding: 20px 0; display: flex; align-items: center; gap: 10px;}
@@ -193,7 +191,13 @@
             <section class="kpi-row">
                 <div class="kpi-card"><div class="kpi-title">APR REVENUE</div><div class="kpi-value">₹12.6L</div><div class="kpi-sub">3 days in • ₹4.2L/day avg</div></div>
                 <div class="kpi-card orange"><div class="kpi-title">ENROLLMENTS (APR)</div><div class="kpi-value">21</div><div class="kpi-sub">7 per day average</div></div>
-                <div class="kpi-card grey"><div class="kpi-title">ACTIVE STUDENTS</div><div class="kpi-value">4,264</div><div class="kpi-sub">+6 this week</div></div>
+                
+                <div class="kpi-card grey">
+                    <div class="kpi-title">ACTIVE STUDENTS</div>
+                    <div class="kpi-value" id="live-active-students">Loading...</div>
+                    <div class="kpi-sub" id="live-active-students-sub">Fetching data...</div>
+                </div>
+                
                 <div class="kpi-card grey"><div class="kpi-title">HEADCOUNT</div><div class="kpi-value">112</div><div class="kpi-sub critical">46.4% attrition • Critical</div></div>
             </section>
 
@@ -224,10 +228,8 @@
         </div>
 
         <div id="DynamicSheetView" class="view-container">
-            <div class="table-wrapper" id="tableContainer">
-                </div>
+            <div class="table-wrapper" id="tableContainer"></div>
         </div>
-
     </main>
 
     <script>
@@ -242,12 +244,57 @@
         const dateOptions = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
         document.getElementById('topDate').innerText = new Date().toLocaleDateString('en-GB', dateOptions);
 
+        // Fetch Live Data for the Command Centre Widgets on load
+        window.onload = function() {
+            fetchLiveCommandCentreData();
+        };
+
+        async function fetchLiveCommandCentreData() {
+            if (WEB_APP_URL === 'YOUR_WEB_APP_URL_HERE') return;
+
+            try {
+                // Fetch the Product sheet to get the Active Students live count
+                const res = await fetch(`${WEB_APP_URL}?tabName=Product`);
+                const json = await res.json();
+                
+                if (json.data) {
+                    const rows = json.data;
+                    
+                    // Filter out header rows (first 4 rows) and totally blank rows
+                    const dataRows = rows.slice(4).filter(r => r[1] && r[1].toString().trim() !== "");
+                    
+                    if (dataRows.length > 0) {
+                        // The latest row is the last one in the array
+                        const latestRow = dataRows[dataRows.length - 1];
+                        // Column D (Active Students) is Index 3
+                        const latestActiveStudents = latestRow[3] || 0;
+                        
+                        document.getElementById('live-active-students').innerText = latestActiveStudents.toLocaleString();
+                        
+                        // Compare with previous day/week if there is history
+                        if (dataRows.length > 1) {
+                            const prevRow = dataRows[dataRows.length - 2];
+                            const prevActiveStudents = prevRow[3] || 0;
+                            const diff = parseInt(latestActiveStudents) - parseInt(prevActiveStudents);
+                            const trendText = diff >= 0 ? `+${diff} from yesterday` : `${diff} from yesterday`;
+                            document.getElementById('live-active-students-sub').innerText = trendText;
+                        } else {
+                            document.getElementById('live-active-students-sub').innerText = 'Live data connected';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Could not fetch live dashboard metrics.", error);
+                document.getElementById('live-active-students').innerText = "N/A";
+                document.getElementById('live-active-students-sub').innerText = "API connection failed";
+            }
+        }
+
         function updateSidebarActive(element) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             element.classList.add('active');
         }
 
-        // Load the static Overview
         function loadCommandCentre(element) {
             updateSidebarActive(element);
             currentActiveTab = 'Command Centre';
@@ -256,9 +303,11 @@
             
             document.getElementById('CommandCentreView').classList.add('active');
             document.getElementById('DynamicSheetView').classList.remove('active');
+            
+            // Refresh live stats when returning to Command Centre
+            fetchLiveCommandCentreData();
         }
 
-        // Fetch data and load the dynamic Table
         async function loadSheet(sheetName, element) {
             updateSidebarActive(element);
             currentActiveTab = sheetName;
@@ -281,7 +330,7 @@
                 const result = await response.json();
 
                 if (result.error) {
-                    container.innerHTML = `<p style="color:red; padding:20px;">Error: ${result.error}</p>`;
+                    container.innerHTML = `<p style="color:red; padding:20px;">Error: ${result.error} <br> <small>(Make sure the tab name in Google Sheets matches exactly)</small></p>`;
                 } else {
                     renderTable(result.data);
                 }
@@ -300,7 +349,7 @@
             dataArray.forEach((row, rowIndex) => {
                 html += "<tr>";
                 row.forEach(cell => {
-                    if (rowIndex < 4) { // Treat first 4 rows as headers based on your sheet structure
+                    if (rowIndex < 4) { // First 4 rows are headers
                         html += `<th>${cell}</th>`;
                     } else {
                         html += `<td>${cell}</td>`;
@@ -314,7 +363,6 @@
         }
 
         function refreshCurrentView() {
-            // Find the currently active nav item and click it again to refresh
             const activeNav = document.querySelector('.nav-item.active');
             if(activeNav) activeNav.click();
         }
