@@ -5,716 +5,110 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>COO Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:        #06080f;
-      --surface:   #0c1120;
-      --border:    #1a2540;
-      --accent:    #00d9ff;
-      --accent2:   #ff6b35;
-      --accent3:   #7c3aed;
-      --text:      #e2e8f0;
-      --muted:     #5a6a8a;
-      --green:     #00f5a0;
-      --red:       #ff4f6a;
-    }
-
     body {
-      font-family: 'Syne', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
+      background: #06080f;
+      color: #e2e8f0;
+      font-family: Arial;
+      padding: 20px;
     }
-
-    /* Noise overlay */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
+    .card {
+      background: #0c1120;
+      border: 1px solid #1a2540;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
     }
-
-    /* Ambient glow blobs */
-    .blob {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(120px);
-      opacity: 0.08;
-      pointer-events: none;
-      z-index: 0;
-    }
-    .blob-1 { width: 600px; height: 600px; background: var(--accent); top: -200px; left: -200px; }
-    .blob-2 { width: 400px; height: 400px; background: var(--accent3); bottom: 0; right: -100px; }
-
-    .wrapper {
-      position: relative;
-      z-index: 1;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 40px 24px 80px;
-    }
-
-    /* HEADER */
-    header {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      margin-bottom: 48px;
-      padding-bottom: 24px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .header-left h1 {
-      font-size: clamp(28px, 4vw, 44px);
-      font-weight: 800;
-      letter-spacing: -1.5px;
-      line-height: 1;
-      background: linear-gradient(135deg, var(--text) 0%, var(--muted) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .header-left p {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--muted);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-top: 6px;
-    }
-
-    .live-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--green);
-      letter-spacing: 1px;
-    }
-
-    .live-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 10px var(--green);
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.7); }
-    }
-
-    /* KPI GRID */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .kpi-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px 24px;
-      position: relative;
-      overflow: hidden;
-      animation: fadeUp 0.5s ease both;
-    }
-
-    .kpi-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: var(--accent-color, var(--accent));
-    }
-
-    .kpi-card:nth-child(1) { --accent-color: var(--accent); animation-delay: 0.05s; }
-    .kpi-card:nth-child(2) { --accent-color: var(--accent2); animation-delay: 0.1s; }
-    .kpi-card:nth-child(3) { --accent-color: var(--green); animation-delay: 0.15s; }
-    .kpi-card:nth-child(4) { --accent-color: var(--accent3); animation-delay: 0.2s; }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .kpi-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 14px;
-    }
-
-    .kpi-value {
-      font-size: 38px;
-      font-weight: 800;
-      letter-spacing: -2px;
-      line-height: 1;
-      color: var(--text);
-    }
-
-    .kpi-value.loading {
-      background: linear-gradient(90deg, var(--border) 25%, #243050 50%, var(--border) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: 6px;
-      width: 120px;
-      height: 38px;
-      color: transparent;
-    }
-
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    .kpi-delta {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      margin-top: 10px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .kpi-delta.up { color: var(--green); }
-    .kpi-delta.down { color: var(--red); }
-
-    /* CHART SECTION */
-    .charts-row {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .chart-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px 24px;
-      animation: fadeUp 0.5s ease 0.3s both;
-    }
-
-    .chart-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
-
-    .chart-title {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-    }
-
-    .chart-sub {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-    }
-
-    .chart-canvas-wrap {
-      position: relative;
-      height: 260px;
-    }
-
-    /* DONUT card */
-    .donut-card {
-      animation-delay: 0.35s;
-    }
-
-    .donut-canvas-wrap {
-      position: relative;
-      height: 200px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .donut-center {
-      position: absolute;
-      text-align: center;
-      pointer-events: none;
-    }
-
-    .donut-center-value {
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: -1px;
-    }
-
-    .donut-center-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      color: var(--muted);
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-    }
-
-    .legend {
-      margin-top: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-    }
-
-    .legend-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--muted);
-    }
-
-    .legend-dot {
-      width: 8px; height: 8px;
-      border-radius: 2px;
-    }
-
-    .legend-pct {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      font-weight: 500;
-    }
-
-    /* TABLE */
-    .table-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px 24px;
-      animation: fadeUp 0.5s ease 0.4s both;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-
-    thead th {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      padding: 0 16px 14px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-    }
-
-    tbody tr {
-      transition: background 0.15s;
-      cursor: default;
-    }
-
-    tbody tr:hover { background: rgba(255,255,255,0.03); }
-
-    tbody td {
-      padding: 14px 16px;
-      border-bottom: 1px solid rgba(26,37,64,0.6);
-      font-variant-numeric: tabular-nums;
-    }
-
-    tbody tr:last-child td { border-bottom: none; }
-
-    .tag {
-      display: inline-block;
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      letter-spacing: 0.5px;
-    }
-
-    .tag-up { background: rgba(0,245,160,0.1); color: var(--green); }
-    .tag-down { background: rgba(255,79,106,0.1); color: var(--red); }
-
-    /* FOOTER */
-    footer {
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    footer span {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 1px;
-    }
-
-    #last-updated { color: var(--accent); }
-
-    /* Error state */
-    .error-msg {
-      font-family: 'DM Mono', monospace;
-      font-size: 12px;
-      color: var(--red);
-      background: rgba(255,79,106,0.08);
-      border: 1px solid rgba(255,79,106,0.2);
-      border-radius: 8px;
-      padding: 12px 16px;
-      margin-bottom: 16px;
-      display: none;
+    .kpi {
+      font-size: 30px;
+      font-weight: bold;
     }
   </style>
 </head>
+
 <body>
 
-<div class="blob blob-1"></div>
-<div class="blob blob-2"></div>
+<h1>📊 COO Dashboard</h1>
 
-<div class="wrapper">
+<div id="error" style="color:red;display:none;">Error loading data</div>
 
-  <header>
-    <div class="header-left">
-      <h1>Operations HQ</h1>
-      <p>Chief Operating Officer · Performance Overview</p>
-    </div>
-    <div class="live-badge">
-      <span class="live-dot"></span>
-      <span>LIVE DATA</span>
-    </div>
-  </header>
+<div class="card">
+  <h3>Sessions</h3>
+  <div id="sessions" class="kpi">Loading...</div>
+</div>
 
-  <div id="error-msg" class="error-msg">⚠ Could not fetch data. Check your Apps Script URL.</div>
+<div class="card">
+  <h3>Revenue</h3>
+  <div id="revenue" class="kpi">Loading...</div>
+</div>
 
-  <!-- KPI Cards -->
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-label">Today's Sessions</div>
-      <div id="kpi-sessions" class="kpi-value loading">—</div>
-      <div id="kpi-sessions-delta" class="kpi-delta"></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Total Revenue</div>
-      <div id="kpi-revenue" class="kpi-value loading">—</div>
-      <div id="kpi-revenue-delta" class="kpi-delta"></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Avg Rev / Session</div>
-      <div id="kpi-rps" class="kpi-value loading">—</div>
-      <div id="kpi-rps-delta" class="kpi-delta"></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Data Points</div>
-      <div id="kpi-count" class="kpi-value loading">—</div>
-      <div class="kpi-delta up">↑ rows loaded</div>
-    </div>
-  </div>
+<div class="card">
+  <h3>Avg Revenue / Session</h3>
+  <div id="rps" class="kpi">Loading...</div>
+</div>
 
-  <!-- Main Chart + Donut -->
-  <div class="charts-row">
-    <div class="chart-card">
-      <div class="chart-header">
-        <div class="chart-title">Sessions &amp; Revenue Trend</div>
-        <div class="chart-sub">All Time</div>
-      </div>
-      <div class="chart-canvas-wrap">
-        <canvas id="line-chart"></canvas>
-      </div>
-    </div>
-    <div class="chart-card donut-card">
-      <div class="chart-header">
-        <div class="chart-title">Revenue Split</div>
-        <div class="chart-sub">vs Avg</div>
-      </div>
-      <div class="donut-canvas-wrap">
-        <canvas id="donut-chart"></canvas>
-        <div class="donut-center">
-          <div class="donut-center-value" id="donut-center-val">—</div>
-          <div class="donut-center-label">Total</div>
-        </div>
-      </div>
-      <div class="legend" id="donut-legend"></div>
-    </div>
-  </div>
-
-  <!-- Recent Sessions Table -->
-  <div class="table-card">
-    <div class="chart-header">
-      <div class="chart-title">Recent Activity Log</div>
-      <div class="chart-sub">Last 7 Rows</div>
-    </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Sessions</th>
-          <th>Revenue (₹)</th>
-          <th>Rev / Session</th>
-          <th>Trend</th>
-        </tr>
-      </thead>
-      <tbody id="table-body">
-        <tr><td colspan="5" style="color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:20px 16px;">Loading data…</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <footer>
-    <span>COO Dashboard · Powered by Google Sheets</span>
-    <span>Last refresh: <span id="last-updated">—</span></span>
-  </footer>
-
+<div class="card">
+  <canvas id="chart"></canvas>
 </div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbx4naJ4pNxaNi6h4M3uNzK0CpmqIeOler9UQLNqhDYlSN3sJNb7MscuzDnRvfGWs84lag/exec";
 
-  const fmt = (n) => new Intl.NumberFormat('en-IN').format(Math.round(n));
-  const fmtCur = (n) => '₹' + fmt(n);
-  const fmtDate = (d) => new Date(d).toLocaleDateString('en-IN', { day:'2-digit', month:'short' });
+const API_URL = "https://script.google.com/macros/s/AKfycbx4naJ4pNxaNi6h4M3uNzK0CpmqIeOler9UQLNqhDYlSN3sJNb7MscuzDnRvfGWs84lag/exec";
 
-  function delta(current, prev, isCurrency = false) {
-    if (!prev) return null;
-    const pct = ((current - prev) / prev * 100).toFixed(1);
-    const up = current >= prev;
-    return { pct, up, label: (up ? '▲' : '▼') + ' ' + Math.abs(pct) + '% vs previous' };
-  }
+let chart;
 
-  function setDelta(el, d) {
-    if (!d) return;
-    el.textContent = d.label;
-    el.className = 'kpi-delta ' + (d.up ? 'up' : 'down');
-  }
+async function loadData() {
+  try {
+    const res = await fetch(API_URL);
+    const data = await res.json();
 
-  let lineChart, donutChart;
+    if (!data || data.length === 0) throw "No data";
 
-  async function loadData() {
-    try {
-      const res = await fetch(API_URL);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
+    const latest = data[data.length - 1];
 
-      if (!data || data.length === 0) throw new Error('Empty data');
+    const sessions = Number(latest.Sessions) || 0;
+    const revenue = Number(latest.Revenue) || 0;
+    const rps = sessions ? Math.round(revenue / sessions) : 0;
 
-      const latest = data[data.length - 1];
-      const prev   = data.length > 1 ? data[data.length - 2] : null;
+    document.getElementById("sessions").innerText = sessions;
+    document.getElementById("revenue").innerText = "₹ " + revenue.toLocaleString();
+    document.getElementById("rps").innerText = "₹ " + rps.toLocaleString();
 
-      // Remove shimmer
-      document.querySelectorAll('.kpi-value').forEach(el => el.classList.remove('loading'));
+    const labels = data.map(d => new Date(d.Date).toLocaleDateString());
+    const sessionArr = data.map(d => Number(d.Sessions) || 0);
+    const revenueArr = data.map(d => Number(d.Revenue) || 0);
 
-      // KPI values
-      document.getElementById('kpi-sessions').textContent = fmt(latest.Sessions);
-      document.getElementById('kpi-revenue').textContent  = fmtCur(latest.Revenue);
-      const rps = latest.Revenue / latest.Sessions;
-      document.getElementById('kpi-rps').textContent = fmtCur(rps);
-      document.getElementById('kpi-count').textContent = data.length;
+    if (chart) chart.destroy();
 
-      // Deltas
-      if (prev) {
-        setDelta(document.getElementById('kpi-sessions-delta'), delta(latest.Sessions, prev.Sessions));
-        setDelta(document.getElementById('kpi-revenue-delta'), delta(latest.Revenue, prev.Revenue));
-        const prevRps = prev.Revenue / prev.Sessions;
-        setDelta(document.getElementById('kpi-rps-delta'), delta(rps, prevRps));
-      }
-
-      // ── LINE CHART ──
-      const labels   = data.map(d => fmtDate(d.Date));
-      const sessions = data.map(d => +d.Sessions);
-      const revenue  = data.map(d => +d.Revenue);
-
-      if (lineChart) lineChart.destroy();
-      lineChart = new Chart(document.getElementById('line-chart'), {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'Sessions',
-              data: sessions,
-              borderColor: '#00d9ff',
-              backgroundColor: 'rgba(0,217,255,0.08)',
-              borderWidth: 2,
-              pointRadius: 3,
-              pointBackgroundColor: '#00d9ff',
-              tension: 0.4,
-              fill: true,
-              yAxisID: 'y'
-            },
-            {
-              label: 'Revenue (₹)',
-              data: revenue,
-              borderColor: '#ff6b35',
-              backgroundColor: 'rgba(255,107,53,0.08)',
-              borderWidth: 2,
-              pointRadius: 3,
-              pointBackgroundColor: '#ff6b35',
-              tension: 0.4,
-              fill: true,
-              yAxisID: 'y1'
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: {
-              labels: {
-                color: '#5a6a8a',
-                font: { family: 'DM Mono', size: 10 },
-                boxWidth: 12,
-                usePointStyle: true,
-                pointStyle: 'circle'
-              }
-            },
-            tooltip: {
-              backgroundColor: '#0c1120',
-              borderColor: '#1a2540',
-              borderWidth: 1,
-              titleColor: '#e2e8f0',
-              bodyColor: '#5a6a8a',
-              titleFont: { family: 'Syne', weight: '700', size: 12 },
-              bodyFont: { family: 'DM Mono', size: 11 },
-              padding: 12,
-              callbacks: {
-                label: (ctx) => {
-                  const v = ctx.parsed.y;
-                  return ctx.datasetIndex === 1
-                    ? ' Revenue: ₹' + fmt(v)
-                    : ' Sessions: ' + fmt(v);
-                }
-              }
-            }
+    chart = new Chart(document.getElementById("chart"), {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Sessions",
+            data: sessionArr,
+            borderWidth: 2
           },
-          scales: {
-            x: {
-              grid: { color: 'rgba(26,37,64,0.6)' },
-              ticks: { color: '#5a6a8a', font: { family: 'DM Mono', size: 10 }, maxTicksLimit: 8 }
-            },
-            y: {
-              position: 'left',
-              grid: { color: 'rgba(26,37,64,0.6)' },
-              ticks: { color: '#00d9ff', font: { family: 'DM Mono', size: 10 }, maxTicksLimit: 5 }
-            },
-            y1: {
-              position: 'right',
-              grid: { drawOnChartArea: false },
-              ticks: { color: '#ff6b35', font: { family: 'DM Mono', size: 10 }, maxTicksLimit: 5,
-                callback: v => '₹' + fmt(v) }
-            }
+          {
+            label: "Revenue",
+            data: revenueArr,
+            borderWidth: 2
           }
-        }
-      });
+        ]
+      }
+    });
 
-      // ── DONUT CHART ──
-      const totalRev = revenue.reduce((a,b) => a+b, 0);
-      const avgRev   = totalRev / data.length;
-      const above    = revenue.filter(v => v >= avgRev).reduce((a,b) => a+b, 0);
-      const below    = revenue.filter(v => v <  avgRev).reduce((a,b) => a+b, 0);
-
-      document.getElementById('donut-center-val').textContent = fmtCur(totalRev);
-
-      const donutColors = ['#00d9ff', '#7c3aed'];
-      if (donutChart) donutChart.destroy();
-      donutChart = new Chart(document.getElementById('donut-chart'), {
-        type: 'doughnut',
-        data: {
-          labels: ['Above Avg', 'Below Avg'],
-          datasets: [{
-            data: [above, below],
-            backgroundColor: donutColors,
-            borderColor: '#0c1120',
-            borderWidth: 3,
-            hoverBorderWidth: 3
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '72%',
-          plugins: { legend: { display: false }, tooltip: {
-            backgroundColor: '#0c1120',
-            borderColor: '#1a2540',
-            borderWidth: 1,
-            titleColor: '#e2e8f0',
-            bodyColor: '#5a6a8a',
-            titleFont: { family: 'Syne', weight: '700', size: 11 },
-            bodyFont: { family: 'DM Mono', size: 10 },
-            callbacks: {
-              label: (ctx) => ' ₹' + fmt(ctx.parsed) + ' (' + (ctx.parsed/totalRev*100).toFixed(1) + '%)'
-            }
-          }}
-        }
-      });
-
-      // Donut legend
-      const legendEl = document.getElementById('donut-legend');
-      ['Above Avg', 'Below Avg'].forEach((label, i) => {
-        const val = i === 0 ? above : below;
-        const pct = (val / totalRev * 100).toFixed(1);
-        legendEl.innerHTML += `
-          <div class="legend-item">
-            <div class="legend-left">
-              <div class="legend-dot" style="background:${donutColors[i]}"></div>
-              <span>${label}</span>
-            </div>
-            <span class="legend-pct" style="color:${donutColors[i]}">${pct}%</span>
-          </div>`;
-      });
-
-      // ── TABLE ──
-      const recent = data.slice(-7).reverse();
-      const tbody  = document.getElementById('table-body');
-      tbody.innerHTML = '';
-      recent.forEach((row, i) => {
-        const nextRow  = i < recent.length - 1 ? recent[i + 1] : null;
-        const rpsRow   = (row.Revenue / row.Sessions).toFixed(0);
-        const up       = nextRow ? row.Revenue >= nextRow.Revenue : true;
-        tbody.innerHTML += `
-          <tr>
-            <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${fmtDate(row.Date)}</td>
-            <td>${fmt(row.Sessions)}</td>
-            <td>${fmtCur(row.Revenue)}</td>
-            <td style="font-family:'DM Mono',monospace">₹${fmt(rpsRow)}</td>
-            <td><span class="tag ${up ? 'tag-up':'tag-down'}">${up ? '▲ UP':'▼ DOWN'}</span></td>
-          </tr>`;
-      });
-
-      document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('en-IN');
-
-    } catch (err) {
-      document.getElementById('error-msg').style.display = 'block';
-      document.querySelectorAll('.kpi-value').forEach(el => {
-        el.classList.remove('loading');
-        el.textContent = '—';
-        el.style.color = 'var(--muted)';
-      });
-      console.error('Dashboard error:', err);
-    }
+  } catch (err) {
+    console.log(err);
+    document.getElementById("error").style.display = "block";
   }
+}
 
-  loadData();
-  setInterval(loadData, 60000); // Auto-refresh every 60s
+loadData();
+setInterval(loadData, 60000);
+
 </script>
 
 </body>
