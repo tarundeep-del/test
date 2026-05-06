@@ -67,7 +67,7 @@ async function loadData() {
 
     const latest = data[data.length - 1];
 
-    const sessions = Number(latest.Sessions) || 0;
+    const sessions = Number(latest["Total Sessions"]) || 0;
     const revenue = Number(latest.Revenue) || 0;
     const rps = sessions ? Math.round(revenue / sessions) : 0;
 
@@ -76,7 +76,7 @@ async function loadData() {
     document.getElementById("rps").innerText = "₹ " + rps.toLocaleString();
 
     const labels = data.map(d => new Date(d.Date).toLocaleDateString());
-    const sessionArr = data.map(d => Number(d.Sessions) || 0);
+    const sessionArr = data.map(d => Number(d["Total Sessions"]) || 0);
     const revenueArr = data.map(d => Number(d.Revenue) || 0);
 
     if (chart) chart.destroy();
